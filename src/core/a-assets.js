@@ -6,7 +6,9 @@ module.exports = registerElement('a-assets', {
   prototype: Object.create(ANode.prototype, {
     attachedCallback: {
       value: function () {
-        this.load();
+        // HACK There are some strange intermittent startup race conditions caused by making this sync.
+        // Having a delay here (as there was before with content loading) seems to eliminate them. 0 does not.
+        setTimeout(() => this.load(), 100)
       }
     }
   })
