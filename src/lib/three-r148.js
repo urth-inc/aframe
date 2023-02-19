@@ -1,4 +1,4 @@
-var THREE_R148 = global.THREE = require('three-r148');
+var THREE_R148 = require('three-r148');
 
 // Allow cross-origin images to be loaded.
 
