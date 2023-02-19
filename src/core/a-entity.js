@@ -150,7 +150,7 @@ var proto = Object.create(ANode.prototype, {
       var oldObj;
       var self = this;
 
-      if (!(obj instanceof THREE.Object3D) && !(obj instanceof THREE_R148.object3D)) {
+      if (!(obj instanceof THREE.Object3D) && !(obj instanceof THREE_R148.Object3D)) {
         throw new Error(
           '`Entity.setObject3D` was called with an object that was not an instance of ' +
           'THREE.Object3D.'
