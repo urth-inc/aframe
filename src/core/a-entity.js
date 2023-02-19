@@ -2,6 +2,7 @@ var ANode = require('./a-node');
 var COMPONENTS = require('./component').components;
 var registerElement = require('./a-register-element').registerElement;
 var THREE = require('../lib/three');
+var THREE_R148 = require('../lib/three-r148');
 var utils = require('../utils/');
 
 var AEntity;
@@ -149,7 +150,7 @@ var proto = Object.create(ANode.prototype, {
       var oldObj;
       var self = this;
 
-      if (!(obj instanceof THREE.Object3D)) {
+      if (!(obj instanceof THREE.Object3D) && !(obj instanceof THREE_R148.object3D)) {
         throw new Error(
           '`Entity.setObject3D` was called with an object that was not an instance of ' +
           'THREE.Object3D.'

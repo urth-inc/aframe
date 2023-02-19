@@ -88,12 +88,14 @@
     "sinon-chai": "2.8.0",
     "snazzy": "^5.0.0",
     "three": "^0.141.0",
+    "three-r148": "npm:@urth/three@0.148.0",
     "too-wordy": "ngokevin/too-wordy",
     "uglifyjs": "^2.4.10",
     "write-good": "^0.9.1"
   },
   "peerDependencies": {
     "three": "^0.141.0",
+    "three-r148": "npm:@urth/three@0.148.0",
     "bitecs": "^0.3.38"
   },
   "link": true,
