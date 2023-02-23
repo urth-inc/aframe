@@ -38,6 +38,7 @@
     "vendor/**/*"
   ],
   "dependencies": {
+    "bitecs": "^0.3.38",
     "custom-event-polyfill": "^1.0.6",
     "debug": "ngokevin/debug#noTimestamp",
     "deep-assign": "^2.0.0",
@@ -87,14 +88,14 @@
     "sinon": "^1.17.5",
     "sinon-chai": "2.8.0",
     "snazzy": "^5.0.0",
-    "three": "^0.141.0",
+    "three-mh": "github:urth-inc/three.js#63243c0b6b6192ba96e8d8add09f02fd162225a1",
     "too-wordy": "ngokevin/too-wordy",
     "uglifyjs": "^2.4.10",
     "write-good": "^0.9.1"
   },
   "peerDependencies": {
-    "three": "^0.141.0",
-    "bitecs": "^0.3.38"
+    "bitecs": "^0.3.38",
+    "three": "^0.141.0"
   },
   "link": true,
   "browserify": {
