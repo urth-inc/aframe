@@ -8,7 +8,7 @@ module.exports = registerElement('a-assets', {
       value: function () {
         // HACK There are some strange intermittent startup race conditions caused by making this sync.
         // Having a delay here (as there was before with content loading) seems to eliminate them. 0 does not.
-        setTimeout(() => this.load(), 500)
+        setTimeout(() => this.load(), 500);
       }
     }
   })

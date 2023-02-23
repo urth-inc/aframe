@@ -20,7 +20,7 @@ var registerComponent = require('./core/component').registerComponent;
 var registerSystem = require('./core/system').registerSystem;
 var systems = require('./core/system').systems;
 // Exports THREE to window so three.js can be used without alteration.
-var THREE = window.THREE = require('./lib/three');
+var THREE = window.THREE_MH = require('./lib/three');
 
 require('./components/index'); // Register standard components.
 

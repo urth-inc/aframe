@@ -2,7 +2,7 @@
 var re = require('../a-register-element');
 var scenes = require('./scenes');
 var systems = require('../system').systems;
-var THREE = require('../../lib/three');
+var THREE_MH = require('../../lib/three');
 var utils = require('../../utils/');
 // Require after.
 var AEntity = require('../a-entity');
@@ -39,7 +39,7 @@ module.exports.AScene = registerElement('a-scene', {
         this.hasWebXR = isWebXRAvailable;
         this.isAR = false;
         this.isScene = true;
-        this.object3D = new THREE.Scene();
+        this.object3D = new THREE_MH.Scene();
         var self = this;
         this.object3D.onAfterRender = function (renderer, scene, camera) {
           // THREE may swap the camera used for the rendering if in VR, so we pass it to tock

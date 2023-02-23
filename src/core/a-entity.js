@@ -1,7 +1,7 @@
 var ANode = require('./a-node');
 var COMPONENTS = require('./component').components;
 var registerElement = require('./a-register-element').registerElement;
-var THREE = require('../lib/three');
+var THREE_MH = require('../lib/three');
 var utils = require('../utils/');
 
 var AEntity;
@@ -10,9 +10,9 @@ var warn = utils.debug('core:a-entity:warn');
 
 var MULTIPLE_COMPONENT_DELIMITER = '__';
 var OBJECT3D_COMPONENTS = ['position', 'rotation', 'scale', 'visible'];
-var ONCE = {once: true};
+var ONCE = { once: true };
 
-const {addEntity, removeEntity, addComponent} = require('bitecs');
+const { addEntity, removeEntity, addComponent } = require('bitecs');
 
 // NOTE this should be kept in sync with addObject3DComponent in Hubs. Redefined here to avoid needing to import hubs
 function addObject3DComponent (world, eid, obj) {
@@ -42,7 +42,7 @@ var proto = Object.create(ANode.prototype, {
       this.componentsToUpdate = {};
       this.isEntity = true;
       this.isPlaying = false;
-      this.object3D = new THREE.Group();
+      this.object3D = new THREE_MH.Group();
       this.object3D.el = this;
       this.object3DMap = {};
       this.parentEl = null;
@@ -64,7 +64,9 @@ var proto = Object.create(ANode.prototype, {
         return;
       }
       // When a component is removed after calling el.removeAttribute('material')
-      if (!component && newVal === null) { return; }
+      if (!component && newVal === null) {
+        return;
+      }
       this.setEntityAttribute(attr, oldVal, newVal);
     }
   },
@@ -74,14 +76,16 @@ var proto = Object.create(ANode.prototype, {
    */
   attachedCallback: {
     value: function () {
-      var assetsEl;  // Asset management system element.
+      var assetsEl; // Asset management system element.
       var sceneEl = this.sceneEl;
-      var self = this;  // Component.
+      var self = this; // Component.
 
       this.addToParent();
 
       // Don't .load() scene on attachedCallback.
-      if (this.isScene) { return; }
+      if (this.isScene) {
+        return;
+      }
 
       // Gracefully not error when outside of <a-scene> (e.g., tests).
       if (!sceneEl) {
@@ -91,13 +95,19 @@ var proto = Object.create(ANode.prototype, {
 
       const eid = addEntity(window.APP.world);
       this.eid = eid;
-      addComponent(window.APP.world, window.APP.world.nameToComponent.AEntity, eid);
+      addComponent(
+        window.APP.world,
+        window.APP.world.nameToComponent.AEntity,
+        eid
+      );
       addObject3DComponent(window.APP.world, eid, this.object3D);
 
       // Wait for asset management system to finish before loading.
       assetsEl = sceneEl.querySelector('a-assets');
       if (assetsEl && !assetsEl.hasLoaded) {
-        assetsEl.addEventListener('loaded', function () { self.load(); });
+        assetsEl.addEventListener('loaded', function () {
+          self.load();
+        });
         return;
       }
       this.load();
@@ -112,14 +122,18 @@ var proto = Object.create(ANode.prototype, {
     value: function () {
       var componentName;
 
-      if (!this.parentEl) { return; }
+      if (!this.parentEl) {
+        return;
+      }
 
       // Remove components.
       for (componentName in this.components) {
         this.removeComponent(componentName, false);
       }
 
-      if (this.isScene) { return; }
+      if (this.isScene) {
+        return;
+      }
 
       this.removeFromParent();
       ANode.prototype.detachedCallback.call(this);
@@ -149,16 +163,18 @@ var proto = Object.create(ANode.prototype, {
       var oldObj;
       var self = this;
 
-      if (!(obj instanceof THREE.Object3D)) {
+      if (!obj.isObject3D) {
         throw new Error(
           '`Entity.setObject3D` was called with an object that was not an instance of ' +
-          'THREE.Object3D.'
+            'THREE.Object3D.'
         );
       }
 
       // Remove existing object of the type.
       oldObj = this.getObject3D(type);
-      if (oldObj) { this.object3D.remove(oldObj); }
+      if (oldObj) {
+        this.object3D.remove(oldObj);
+      }
 
       // Set references to A-Frame entity.
       obj.el = this;
@@ -171,7 +187,7 @@ var proto = Object.create(ANode.prototype, {
       // Add.
       this.object3D.add(obj);
       this.object3DMap[type] = obj;
-      this.emit('object3dset', {object: obj, type: type});
+      this.emit('object3dset', { object: obj, type: type });
     }
   },
 
@@ -182,12 +198,16 @@ var proto = Object.create(ANode.prototype, {
     value: function (type) {
       var obj = this.getObject3D(type);
       if (!obj) {
-        warn('Tried to remove `Object3D` of type:', type, 'which was not defined.');
+        warn(
+          'Tried to remove `Object3D` of type:',
+          type,
+          'which was not defined.'
+        );
         return;
       }
       this.object3D.remove(obj);
       delete this.object3DMap[type];
-      this.emit('object3dremove', {type: type});
+      this.emit('object3dremove', { type: type });
     }
   },
 
@@ -205,8 +225,10 @@ var proto = Object.create(ANode.prototype, {
         object3D = new Constructor();
         this.setObject3D(type, object3D);
       }
-      warn('`getOrCreateObject3D` has been deprecated. Use `setObject3D()` ' +
-           'and `object3dset` event instead.');
+      warn(
+        '`getOrCreateObject3D` has been deprecated. Use `setObject3D()` ' +
+          'and `object3dset` event instead.'
+      );
       return object3D;
     }
   },
@@ -219,10 +241,12 @@ var proto = Object.create(ANode.prototype, {
   add: {
     value: function (el) {
       if (!el.object3D) {
-        throw new Error("Trying to add an element that doesn't have an `object3D`");
+        throw new Error(
+          "Trying to add an element that doesn't have an `object3D`"
+        );
       }
       this.object3D.add(el.object3D);
-      this.emit('child-attached', {el: el});
+      this.emit('child-attached', { el: el });
     }
   },
 
@@ -231,13 +255,15 @@ var proto = Object.create(ANode.prototype, {
    */
   addToParent: {
     value: function () {
-      var parentNode = this.parentEl = this.parentNode;
+      var parentNode = (this.parentEl = this.parentNode);
 
       // `!parentNode` check primarily for unit tests.
-      if (!parentNode || !parentNode.add || this.attachedToParent) { return; }
+      if (!parentNode || !parentNode.add || this.attachedToParent) {
+        return;
+      }
 
       parentNode.add(this);
-      this.attachedToParent = true;  // To prevent multiple attachments to same parent.
+      this.attachedToParent = true; // To prevent multiple attachments to same parent.
     }
   },
 
@@ -250,7 +276,7 @@ var proto = Object.create(ANode.prototype, {
       this.parentEl.remove(this);
       this.attachedToParent = false;
       this.parentEl = null;
-      parentEl.emit('child-detached', {el: this});
+      parentEl.emit('child-detached', { el: this });
     }
   },
 
@@ -258,14 +284,20 @@ var proto = Object.create(ANode.prototype, {
     value: function () {
       var self = this;
 
-      if (this.hasLoaded || !this.parentEl) { return; }
+      if (this.hasLoaded || !this.parentEl) {
+        return;
+      }
 
       ANode.prototype.load.call(this, function entityLoadCallback () {
         // Check if entity was detached while it was waiting to load.
-        if (!self.parentEl) { return; }
+        if (!self.parentEl) {
+          return;
+        }
 
         self.updateComponents();
-        if (self.isScene || self.parentEl.isPlaying) { self.play(); }
+        if (self.isScene || self.parentEl.isPlaying) {
+          self.play();
+        }
       });
     },
     writable: window.debug
@@ -322,33 +354,49 @@ var proto = Object.create(ANode.prototype, {
 
       componentInfo = utils.split(attrName, MULTIPLE_COMPONENT_DELIMITER);
       componentName = componentInfo[0];
-      componentId = componentInfo.length > 2
-        ? componentInfo.slice(1).join('__')
-        : componentInfo[1];
+      componentId =
+        componentInfo.length > 2
+          ? componentInfo.slice(1).join('__')
+          : componentInfo[1];
 
       // Not a registered component.
-      if (!COMPONENTS[componentName]) { return; }
+      if (!COMPONENTS[componentName]) {
+        return;
+      }
 
       // Component is not a dependency and is undefined.
       // If a component is a dependency, then it is okay to have no data.
-      isComponentDefined = checkComponentDefined(this, attrName) ||
-                           data !== undefined;
-      if (!isComponentDefined && !isDependency) { return; }
+      isComponentDefined =
+        checkComponentDefined(this, attrName) || data !== undefined;
+      if (!isComponentDefined && !isDependency) {
+        return;
+      }
 
       // Component already initialized.
-      if (attrName in this.components) { return; }
+      if (attrName in this.components) {
+        return;
+      }
 
       // Initialize dependencies first
       this.initComponentDependencies(componentName);
 
       // If component name has an id we check component type multiplic
       if (componentId && !COMPONENTS[componentName].multiple) {
-        throw new Error('Trying to initialize multiple ' +
-                        'components of type `' + componentName +
-                        '`. There can only be one component of this type per entity.');
+        throw new Error(
+          'Trying to initialize multiple ' +
+            'components of type `' +
+            componentName +
+            '`. There can only be one component of this type per entity.'
+        );
       }
-      component = new COMPONENTS[componentName].Component(this, data, componentId);
-      if (this.isPlaying) { component.play(); }
+      component = new COMPONENTS[componentName].Component(
+        this,
+        data,
+        componentId
+      );
+      if (this.isPlaying) {
+        component.play();
+      }
 
       // Components are reflected in the DOM as attributes but the state is not shown
       // hence we set the attribute to empty string.
@@ -377,19 +425,26 @@ var proto = Object.create(ANode.prototype, {
       var i;
 
       // Not a component.
-      if (!component) { return; }
+      if (!component) {
+        return;
+      }
 
       // No dependencies.
       dependencies = COMPONENTS[name].dependencies;
 
-      if (!dependencies) { return; }
+      if (!dependencies) {
+        return;
+      }
 
       // Initialize dependencies.
       for (i = 0; i < dependencies.length; i++) {
         // Call getAttribute to initialize the data from the DOM.
         self.initComponent(
           dependencies[i],
-          window.HTMLElement.prototype.getAttribute.call(self, dependencies[i]) || undefined,
+          window.HTMLElement.prototype.getAttribute.call(
+            self,
+            dependencies[i]
+          ) || undefined,
           true
         );
       }
@@ -401,15 +456,22 @@ var proto = Object.create(ANode.prototype, {
       var component;
 
       component = this.components[name];
-      if (!component) { return; }
+      if (!component) {
+        return;
+      }
 
       // Wait for component to initialize.
       if (!component.initialized) {
-        this.addEventListener('componentinitialized', function tryRemoveLater (evt) {
-          if (evt.detail.name !== name) { return; }
-          this.removeComponent(name, destroy);
-          this.removeEventListener('componentinitialized', tryRemoveLater);
-        });
+        this.addEventListener(
+          'componentinitialized',
+          function tryRemoveLater (evt) {
+            if (evt.detail.name !== name) {
+              return;
+            }
+            this.removeComponent(name, destroy);
+            this.removeEventListener('componentinitialized', tryRemoveLater);
+          }
+        );
         return;
       }
 
@@ -443,12 +505,16 @@ var proto = Object.create(ANode.prototype, {
       var name;
       var componentsToUpdate = this.componentsToUpdate;
 
-      if (!this.hasLoaded) { return; }
+      if (!this.hasLoaded) {
+        return;
+      }
 
       // Gather mixin-defined components.
       for (i = 0; i < this.mixinEls.length; i++) {
         for (name in this.mixinEls[i].componentCache) {
-          if (isComponent(name)) { componentsToUpdate[name] = true; }
+          if (isComponent(name)) {
+            componentsToUpdate[name] = true;
+          }
         }
       }
 
@@ -456,28 +522,38 @@ var proto = Object.create(ANode.prototype, {
       if (this.getExtraComponents) {
         extraComponents = this.getExtraComponents();
         for (name in extraComponents) {
-          if (isComponent(name)) { componentsToUpdate[name] = true; }
+          if (isComponent(name)) {
+            componentsToUpdate[name] = true;
+          }
         }
       }
 
       // Gather entity-defined components.
       for (i = 0; i < this.attributes.length; ++i) {
         name = this.attributes[i].name;
-        if (OBJECT3D_COMPONENTS.indexOf(name) !== -1) { continue; }
-        if (isComponent(name)) { componentsToUpdate[name] = true; }
+        if (OBJECT3D_COMPONENTS.indexOf(name) !== -1) {
+          continue;
+        }
+        if (isComponent(name)) {
+          componentsToUpdate[name] = true;
+        }
       }
 
       // object3D components first (position, rotation, scale, visible).
       for (i = 0; i < OBJECT3D_COMPONENTS.length; i++) {
         name = OBJECT3D_COMPONENTS[i];
-        if (!this.hasAttribute(name)) { continue; }
+        if (!this.hasAttribute(name)) {
+          continue;
+        }
         this.updateComponent(name, this.getDOMAttribute(name));
       }
 
       // Initialize or update rest of components.
       for (name in componentsToUpdate) {
-        data = mergeComponentData(this.getDOMAttribute(name),
-                                  extraComponents && extraComponents[name]);
+        data = mergeComponentData(
+          this.getDOMAttribute(name),
+          extraComponents && extraComponents[name]
+        );
         this.updateComponent(name, data);
         delete componentsToUpdate[name];
       }
@@ -557,15 +633,21 @@ var proto = Object.create(ANode.prototype, {
       var key;
 
       // Already playing.
-      if (this.isPlaying || !this.hasLoaded) { return; }
+      if (this.isPlaying || !this.hasLoaded) {
+        return;
+      }
       this.isPlaying = true;
 
       // Wake up all components.
-      for (key in this.components) { this.components[key].play(); }
+      for (key in this.components) {
+        this.components[key].play();
+      }
 
       // Tell all child entities to play.
       entities = this.getChildEntities();
-      for (i = 0; i < entities.length; i++) { entities[i].play(); }
+      for (i = 0; i < entities.length; i++) {
+        entities[i].play();
+      }
 
       this.emit('play');
     },
@@ -582,15 +664,21 @@ var proto = Object.create(ANode.prototype, {
       var i;
       var key;
 
-      if (!this.isPlaying) { return; }
+      if (!this.isPlaying) {
+        return;
+      }
       this.isPlaying = false;
 
       // Sleep all components.
-      for (key in this.components) { this.components[key].pause(); }
+      for (key in this.components) {
+        this.components[key].pause();
+      }
 
       // Tell all child entities to pause.
       entities = this.getChildEntities();
-      for (i = 0; i < entities.length; i++) { entities[i].pause(); }
+      for (i = 0; i < entities.length; i++) {
+        entities[i].pause();
+      }
 
       this.emit('pause');
     },
@@ -612,7 +700,9 @@ var proto = Object.create(ANode.prototype, {
       }
       if (attr === 'mixin') {
         // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
-        if (newVal === this.computedMixinStr) { return; }
+        if (newVal === this.computedMixinStr) {
+          return;
+        }
         this.mixinUpdate(newVal, oldVal);
       }
     }
@@ -633,9 +723,13 @@ var proto = Object.create(ANode.prototype, {
         var self = this;
 
         if (!this.hasLoaded) {
-          this.addEventListener('loaded', function () {
-            self.mixinUpdate(newMixins, oldMixins);
-          }, ONCE);
+          this.addEventListener(
+            'loaded',
+            function () {
+              self.mixinUpdate(newMixins, oldMixins);
+            },
+            ONCE
+          );
           return;
         }
 
@@ -662,7 +756,9 @@ var proto = Object.create(ANode.prototype, {
         // Loop over old mixins to call for data rebuild.
         for (i = 0; i < mixinIds.oldMixinIds.length; i++) {
           mixinEl = document.getElementById(mixinIds.oldMixinIds[i]);
-          if (!mixinEl) { continue; }
+          if (!mixinEl) {
+            continue;
+          }
           for (component in mixinEl.componentCache) {
             if (componentsUpdated.indexOf(component) === -1) {
               if (this.components[component]) {
@@ -708,11 +804,14 @@ var proto = Object.create(ANode.prototype, {
         var key;
 
         delimiterIndex = attrName.indexOf(MULTIPLE_COMPONENT_DELIMITER);
-        componentName = delimiterIndex > 0 ? attrName.substring(0, delimiterIndex) : attrName;
+        componentName =
+          delimiterIndex > 0 ? attrName.substring(0, delimiterIndex) : attrName;
 
         // Not a component. Normal set attribute.
         if (!COMPONENTS[componentName]) {
-          if (attrName === 'mixin') { this.mixinUpdate(arg1); }
+          if (attrName === 'mixin') {
+            this.mixinUpdate(arg1);
+          }
           ANode.prototype.setAttribute.call(this, attrName, arg1);
           return;
         }
@@ -721,16 +820,21 @@ var proto = Object.create(ANode.prototype, {
         if (!this.components[attrName] && this.hasAttribute(attrName)) {
           this.updateComponent(
             attrName,
-            window.HTMLElement.prototype.getAttribute.call(this, attrName));
+            window.HTMLElement.prototype.getAttribute.call(this, attrName)
+          );
         }
 
         // Determine new attributes from the arguments
-        if (typeof arg2 !== 'undefined' &&
-            typeof arg1 === 'string' &&
-            arg1.length > 0 &&
-            typeof utils.styleParser.parse(arg1) === 'string') {
+        if (
+          typeof arg2 !== 'undefined' &&
+          typeof arg1 === 'string' &&
+          arg1.length > 0 &&
+          typeof utils.styleParser.parse(arg1) === 'string'
+        ) {
           // Update a single property of a multi-property component
-          for (key in singlePropUpdate) { delete singlePropUpdate[key]; }
+          for (key in singlePropUpdate) {
+            delete singlePropUpdate[key];
+          }
           newAttrValue = singlePropUpdate;
           newAttrValue[arg1] = arg2;
           clobber = false;
@@ -738,7 +842,7 @@ var proto = Object.create(ANode.prototype, {
           // Update with a value, object, or CSS-style property string, with the possiblity
           // of clobbering previous values.
           newAttrValue = arg1;
-          clobber = (arg2 === true);
+          clobber = arg2 === true;
         }
 
         // Update component
@@ -746,7 +850,9 @@ var proto = Object.create(ANode.prototype, {
 
         // In debug mode, write component data up to the DOM.
         isDebugMode = this.sceneEl && this.sceneEl.getAttribute('debug');
-        if (isDebugMode) { this.components[attrName].flushToDOM(); }
+        if (isDebugMode) {
+          this.components[attrName].flushToDOM();
+        }
       };
     })(),
     writable: window.debug
@@ -771,10 +877,14 @@ var proto = Object.create(ANode.prototype, {
       }
 
       // Recurse.
-      if (!recursive) { return; }
+      if (!recursive) {
+        return;
+      }
       for (i = 0; i < children.length; ++i) {
         child = children[i];
-        if (!child.flushToDOM) { continue; }
+        if (!child.flushToDOM) {
+          continue;
+        }
         child.flushToDOM(recursive);
       }
     }
@@ -793,12 +903,22 @@ var proto = Object.create(ANode.prototype, {
     value: function (attr) {
       // If component, return component data.
       var component;
-      if (attr === 'position') { return this.object3D.position; }
-      if (attr === 'rotation') { return getRotation(this); }
-      if (attr === 'scale') { return this.object3D.scale; }
-      if (attr === 'visible') { return this.object3D.visible; }
+      if (attr === 'position') {
+        return this.object3D.position;
+      }
+      if (attr === 'rotation') {
+        return getRotation(this);
+      }
+      if (attr === 'scale') {
+        return this.object3D.scale;
+      }
+      if (attr === 'visible') {
+        return this.object3D.visible;
+      }
       component = this.components[attr];
-      if (component) { return component.data; }
+      if (component) {
+        return component.data;
+      }
       return window.HTMLElement.prototype.getAttribute.call(this, attr);
     },
     writable: window.debug
@@ -818,7 +938,9 @@ var proto = Object.create(ANode.prototype, {
     value: function (attr) {
       // If cached value exists, return partial component data.
       var component = this.components[attr];
-      if (component) { return component.attrValue; }
+      if (component) {
+        return component.attrValue;
+      }
       return window.HTMLElement.prototype.getAttribute.call(this, attr);
     },
     writable: window.debug
@@ -826,7 +948,9 @@ var proto = Object.create(ANode.prototype, {
 
   addState: {
     value: function (state) {
-      if (this.is(state)) { return; }
+      if (this.is(state)) {
+        return;
+      }
       this.states.push(state);
       this.emit('stateadded', state);
     }
@@ -835,7 +959,9 @@ var proto = Object.create(ANode.prototype, {
   removeState: {
     value: function (state) {
       var stateIndex = this.states.indexOf(state);
-      if (stateIndex === -1) { return; }
+      if (stateIndex === -1) {
+        return;
+      }
       this.states.splice(stateIndex, 1);
       this.emit('stateremoved', state);
     }
@@ -887,7 +1013,9 @@ var proto = Object.create(ANode.prototype, {
  */
 function checkComponentDefined (el, name) {
   // Check if element contains the component.
-  if (el.components[name] && el.components[name].attrValue) { return true; }
+  if (el.components[name] && el.components[name].attrValue) {
+    return true;
+  }
 
   return isComponentMixedIn(name, el.mixinEls);
 }
@@ -903,7 +1031,9 @@ function isComponentMixedIn (name, mixinEls) {
   var inMixin = false;
   for (i = 0; i < mixinEls.length; ++i) {
     inMixin = mixinEls[i].hasAttribute(name);
-    if (inMixin) { break; }
+    if (inMixin) {
+      break;
+    }
   }
   return inMixin;
 }
@@ -917,7 +1047,9 @@ function isComponentMixedIn (name, mixinEls) {
  */
 function mergeComponentData (attrValue, extraData) {
   // Extra data not defined, just return attrValue.
-  if (!extraData) { return attrValue; }
+  if (!extraData) {
+    return attrValue;
+  }
 
   // Merge multi-property data.
   if (extraData.constructor === Object) {
@@ -932,12 +1064,14 @@ function isComponent (componentName) {
   if (componentName.indexOf(MULTIPLE_COMPONENT_DELIMITER) !== -1) {
     componentName = utils.split(componentName, MULTIPLE_COMPONENT_DELIMITER)[0];
   }
-  if (!COMPONENTS[componentName]) { return false; }
+  if (!COMPONENTS[componentName]) {
+    return false;
+  }
   return true;
 }
 
 function getRotation (entityEl) {
-  var radToDeg = THREE.MathUtils.radToDeg;
+  var radToDeg = THREE_MH.MathUtils.radToDeg;
   var rotation = entityEl.object3D.rotation;
   var rotationObj = entityEl.rotationObj;
   rotationObj.x = radToDeg(rotation.x);
@@ -946,5 +1080,5 @@ function getRotation (entityEl) {
   return rotationObj;
 }
 
-AEntity = registerElement('a-entity', {prototype: proto});
+AEntity = registerElement('a-entity', { prototype: proto });
 module.exports = AEntity;
